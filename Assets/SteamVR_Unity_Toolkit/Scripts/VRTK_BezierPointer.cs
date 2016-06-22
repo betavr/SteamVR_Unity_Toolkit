@@ -35,6 +35,15 @@ namespace VRTK
         private GameObject pointerCursor;
         private CurveGenerator curvedBeam;
 
+        Transform reference
+        {
+            get
+            {
+                var top = SteamVR_Render.Top();
+                return (top != null) ? top.origin : null;
+            }
+        }
+
         // Use this for initialization
         protected override void Start()
         {
@@ -42,6 +51,33 @@ namespace VRTK
             InitProjectedBeams();
             InitPointer();
             TogglePointer(false);
+
+            var trackedController = GetComponent<SteamVR_TrackedController>();
+            if (trackedController == null) trackedController = gameObject.AddComponent<SteamVR_TrackedController>();
+            trackedController.PadUnclicked += new ClickedEventHandler(DoUnclick);
+            trackedController.PadClicked += new ClickedEventHandler(DoClick);
+
+            /*
+            // Start the player at the level of the terrain
+            var t = reference;
+            if (t != null) t.position = new Vector3(t.position.x, Terrain.activeTerrain.SampleHeight(t.position), t.position.z);
+            */
+        }
+
+        void DoClick(object sender, ClickedEventArgs e)
+        {
+            TogglePointer(true);
+            TogglePointerCursor(true);
+            curvedBeam.TogglePoints(true);
+        }
+
+        void DoUnclick(object sender, ClickedEventArgs e)
+        {
+            TogglePointer(false);
+            TogglePointerCursor(false);
+            curvedBeam.TogglePoints(false);
+
+            reference.position = destinationPosition;
         }
 
         protected override void Update()
@@ -74,7 +110,7 @@ namespace VRTK
 
         private GameObject CreateCursor()
         {
-            float cursorYOffset = 0.02f;
+            float cursorYOffset = .001f; // 0.02f;
             GameObject cursor = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             cursor.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             cursor.GetComponent<MeshRenderer>().receiveShadows = false;

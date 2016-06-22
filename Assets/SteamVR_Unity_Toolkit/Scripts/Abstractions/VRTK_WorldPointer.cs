@@ -19,7 +19,7 @@ namespace VRTK
         public bool beamAlwaysOn = false;
         public float activateDelay = 0f;
 
-        protected Vector3 destinationPosition;
+        public Vector3 destinationPosition;
         protected float pointerContactDistance = 0f;
         protected Transform pointerContactTarget = null;
         protected uint controllerIndex;
@@ -56,25 +56,43 @@ namespace VRTK
 
         protected virtual void Start()
         {
+            /*
             if (GetComponent<VRTK_ControllerEvents>() == null)
             {
                 Debug.LogError("VRTK_WorldPointer is required to be attached to a SteamVR Controller that has the VRTK_ControllerEvents script attached to it");
                 return;
             }
+            */
 
             this.name = "PlayerObject_" + this.name;
 
+            /*
             //Setup controller event listeners
             GetComponent<VRTK_ControllerEvents>().AliasPointerOn += new ControllerInteractionEventHandler(EnablePointerBeam);
             GetComponent<VRTK_ControllerEvents>().AliasPointerOff += new ControllerInteractionEventHandler(DisablePointerBeam);
+            */
 
             headset = DeviceFinder.HeadsetTransform();
 
             playArea = GameObject.FindObjectOfType<SteamVR_PlayArea>();
             playAreaCursorBoundaries = new GameObject[4];
 
-            pointerMaterial = new Material(Shader.Find("Unlit/TransparentColor"));
-            pointerMaterial.color = pointerMissColor;
+            //pointerMaterial = new Material(Shader.Find("Unlit/TransparentColor"));
+            pointerMaterial = new Material(Shader.Find("Valve/vr_standard"));
+            //pointerMaterial.color = pointerMissColor;
+
+            pointerMaterial.DisableKeyword("_ALPHATEST_ON");
+            pointerMaterial.EnableKeyword("_ALPHABLEND_ON");
+            pointerMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+            pointerMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            pointerMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            pointerMaterial.SetInt("_ZWrite", 0);
+            pointerMaterial.renderQueue = 3000;
+
+            pointerMaterial.SetFloat("_Mode", 3f);
+            pointerMaterial.SetColor("_Color", pointerMissColor);
+
         }
 
         protected virtual void Update()
